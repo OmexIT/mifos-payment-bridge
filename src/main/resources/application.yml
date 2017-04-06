@@ -1,0 +1,36 @@
+server:
+  port: 2022
+
+
+
+##
+# App Datasource Configuration
+##
+spring:
+  datasource:
+     initialize: true
+     url: jdbc:mysql://localhost:3306/db_mifos_payment_bridge?verifyServerCertificate=false&useSSL=true
+     username: root
+     password: mysql
+     driver-class-name: com.mysql.jdbc.Driver
+
+# ===========================================================================================
+# = JPA / HIBERNATE
+# ===========================================================================================
+  jpa:
+    generate-ddl: true
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+      naming:
+        strategy: org.hibernate.cfg.ImprovedNamingStrategy
+    properties:
+      hibernate:
+      dialect: org.hibernate.dialect.MySQL5Dialect
+
+mifos:
+  baseUrl: https://demo.openmf.org/fineract-provider/
+  apiVersion: api/v1/
+  username: mifos
+  password: password
+

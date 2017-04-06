@@ -1,0 +1,7 @@
+{
+  "channel_name": "Safaricom MPESA",
+  "channel_endpoint_tag": "mpesa",
+  "channel_type": 1,
+  "is_active": true,
+  "is_callback": true
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xmlns:int-jdbc="http://www.springframework.org/schema/integration/jdbc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd">
+
+    <int-jdbc:inbound-channel-adapter
+            id="outgoingSavingsWithdrawChannel"
+            channel="mifosDefaultTenantInputChannel"
+            query="SELECT t.id AS mifos_payment_id, t.savings_account_id AS entity_id, t.transaction_date, t.amount, pt.value AS channel, 1 AS entity_type, 1 AS action_type, 'default' AS tenant_identifier, sa.client_id, sa.currency_code FROM m_savings_account_transaction t INNER JOIN m_savings_account sa ON t.savings_account_id = sa.id INNER JOIN m_payment_detail pd ON t.payment_detail_id = pd.id INNER JOIN m_payment_type pt ON pd.payment_type_id = pt.id WHERE t.transaction_type_enum=2 AND t.payment_status = 0"
+            update="UPDATE m_savings_account_transaction SET payment_status = 1 where id in (:mifosPaymentId)"
+            row-mapper="outgoingPaymentMapper"
+            data-source="defaultTenantDataSource">
+        <int:poller fixed-rate="100">
+            <int:transactional/>
+        </int:poller>
+    </int-jdbc:inbound-channel-adapter>
+
+    <bean id="defaultTenantDataSource"
+          class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+        <property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost:3306/mifostenant-default?verifyServerCertificate=false&amp;useSSL=true"/>
+        <property name="username" value="root"/>
+        <property name="password" value="mysql"/>
+    </bean>
+
+    <int:poller default="true" fixed-delay="1000"/>
+
+    <int:channel id="mifosDefaultTenantInputChannel">
+        <int:queue/>
+    </int:channel>
+
+    <int:service-activator ref="outgoingPaymentHandler" method="handlePayment" input-channel="mifosDefaultTenantInputChannel"/>
+</beans>
