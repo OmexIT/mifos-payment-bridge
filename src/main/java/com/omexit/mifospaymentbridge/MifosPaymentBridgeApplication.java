@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportResource;
 
 @SpringBootApplication
-@ImportResource("integration-context.xml")
+@ImportResource("classpath:integrations/integration-context.xml")
 public class MifosPaymentBridgeApplication {
 
 	public static void main(String[] args) {

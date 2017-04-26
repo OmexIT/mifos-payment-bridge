@@ -18,6 +18,8 @@ import java.util.Date;
 
 /**
  * Created by aomeri on 4/2/17.
+ *
+ * Provides JDBC row mapper for outgoing payments from mifos.
  */
 @Component
 public class OutgoingPaymentMapper implements RowMapper<Payment> {
@@ -28,6 +30,14 @@ public class OutgoingPaymentMapper implements RowMapper<Payment> {
         this.channelService = channelService;
     }
 
+    /**
+     * Method to map query resultset to outgoing message
+     *
+     * @param resultSet
+     * @param i
+     * @return
+     * @throws SQLException
+     */
     @Override
     public OutgoingPayment mapRow(ResultSet resultSet, int i) throws SQLException {
         Long entityId = resultSet.getLong("entity_id");

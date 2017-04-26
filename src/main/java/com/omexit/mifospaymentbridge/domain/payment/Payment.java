@@ -94,6 +94,12 @@ public abstract class Payment implements Serializable {
     @JsonProperty("last_modified")
     @Column(name = "last_modified", nullable = false)
     private Date lastModified;
+    @JsonFormat(
+            shape = JsonFormat.Shape.STRING,
+            pattern = DateUtil.DEFAULT_DATE_FORMAT)
+    @JsonProperty("transaction_date")
+    @Column(name = "transaction_date")
+    private Date transactionDate;
 
     @PrePersist
     protected void onCreate() {

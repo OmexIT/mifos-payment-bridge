@@ -2,6 +2,7 @@ package com.omexit.mifospaymentbridge.repository;
 
 import com.omexit.mifospaymentbridge.domain.channel.Channel;
 import com.omexit.mifospaymentbridge.domain.payment.Payment;
+import com.omexit.mifospaymentbridge.types.EntityType;
 import com.omexit.mifospaymentbridge.types.PaymentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
@@ -30,4 +31,7 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     Payment findByExternalIdAndChannel(String externalId, Channel channel);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Payment findByTenantIdentifierAndEntityTypeAndMifosPaymentId(String tenantIdentifier, EntityType entityType, Long mifosPaymentId);
 }

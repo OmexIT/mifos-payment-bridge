@@ -1,7 +1,7 @@
 package com.omexit.mifospaymentbridge.integration;
 
 import com.omexit.mifospaymentbridge.domain.channel.Channel;
-import com.omexit.mifospaymentbridge.domain.payment.Payment;
+import com.omexit.mifospaymentbridge.domain.payment.OutgoingPayment;
 import com.omexit.mifospaymentbridge.mifos.MifosService;
 import com.omexit.mifospaymentbridge.mifos.domain.client.Client;
 import com.omexit.mifospaymentbridge.services.payment.PaymentServiceImpl;
@@ -15,7 +15,6 @@ import org.springframework.messaging.Message;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.Collection;
 
 /**
  * Created by aomeri on 4/2/17.
@@ -32,50 +31,53 @@ public class OutgoingPaymentHandler {
         this.mifosService = mifosService;
     }
 
+    /**
+     * Method to handle outgoing payments from mifos
+     *
+     * @param message OutgoingPayment object wrapped in message envelope
+     */
     @Transactional
-    public void handlePayment(Message<Collection<Payment>> message) {
+    public void handlePayment(Message<OutgoingPayment> message) {
         try {
-            Collection<Payment> payments = message.getPayload();
-            logger.info("Received {} payments", payments.size());
-            for (Payment payment : payments) {
-                Channel channel = payment.getChannel();
-                Long clientId = payment.getClientId();
-                String tenantIdentifier = payment.getTenantIdentifier();
-                boolean isPretty = false;
-                String fields = "mobileNo";
+            OutgoingPayment payment = message.getPayload();
+            logger.info("- handlePayment({})", payment);
+            Channel channel = payment.getChannel();
+            Long clientId = payment.getClientId();
+            String tenantIdentifier = payment.getTenantIdentifier();
+            boolean isPretty = false;
+            String fields = "mobileNo";
 
-                if (channel != null) {
-                    switch (channel.getChannelType()) {
-                        case MOBILE_MONEY_CHANNEL:
-                            logger.info("Fetching client: {} details in tenant: {} ...", clientId, tenantIdentifier);
-                            Client client = mifosService.getClientByID(clientId, tenantIdentifier, isPretty, fields);
-                            if (client != null) {
-                                String mobileNo = client.getMobileNo();
-                                if (!MSISDNUtil.isValidNumber(mobileNo, channel.getPhoneNumberDefaultRegion())) {
-                                    payment.setPaymentStatus(PaymentStatus.PAYMENT_FAILED);
-                                    payment.setReasonCode(ReasonCode.INVALID_PHONE_NUMBER);
-                                    logger.warn("Unable to fetch a valid phone number for mifos tenant: {} client id: {} ", payment.getTenantIdentifier(), payment.getClientId());
-                                }else {
-                                    payment.setPaymentStatus(PaymentStatus.PAYMENT_PENDING);
-                                    payment.setReasonCode(ReasonCode.OK);
-                                }
-                                payment.setPaymentAccount(mobileNo);
+            if (channel != null) {
+                switch (channel.getChannelType()) {
+                    case MOBILE_MONEY_CHANNEL:
+                        logger.info("Fetching client: {} details in tenant: {} ...", clientId, tenantIdentifier);
+                        Client client = mifosService.getClientByID(clientId, tenantIdentifier, isPretty, fields);
+                        if (client != null) {
+                            String mobileNo = client.getMobileNo();
+                            if (!MSISDNUtil.isValidNumber(mobileNo, channel.getPhoneNumberDefaultRegion())) {
+                                payment.setPaymentStatus(PaymentStatus.PAYMENT_FAILED);
+                                payment.setReasonCode(ReasonCode.INVALID_PHONE_NUMBER);
+                                logger.warn("Unable to fetch a valid phone number for mifos tenant: {} client id: {} ", payment.getTenantIdentifier(), payment.getClientId());
+                            } else {
+                                payment.setPaymentStatus(PaymentStatus.PAYMENT_PENDING);
+                                payment.setReasonCode(ReasonCode.OK);
                             }
-                            break;
-                        case BANKING_CHANNEL:
-                            //TODO:Get client bank details
-                            break;
-                        case EMAIL_MONEY_CHANNEL:
-                            //TODO:Get client email details
-                            break;
-                        default:
-                            logger.warn("Invalid channel type");
-                            break;
-                    }
+                            payment.setPaymentAccount(mobileNo);
+                        }
+                        break;
+                    case BANKING_CHANNEL:
+                        //TODO:Get client bank details
+                        break;
+                    case EMAIL_MONEY_CHANNEL:
+                        //TODO:Get client email details
+                        break;
+                    default:
+                        logger.warn("Invalid channel type");
+                        break;
                 }
-                payment = paymentService.savePayment(payment);
-                logger.debug("Saved, payment: {}", payment);
             }
+            payment = (OutgoingPayment) paymentService.savePayment(payment);
+            logger.debug("Saved, payment: {}", payment);
         } catch (IOException e) {
             logger.info(e.getMessage(), e);
         } catch (Exception e) {

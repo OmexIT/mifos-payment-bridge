@@ -3,6 +3,7 @@ package com.omexit.mifospaymentbridge.services.payment;
 import com.omexit.mifospaymentbridge.domain.channel.Channel;
 import com.omexit.mifospaymentbridge.domain.payment.Payment;
 import com.omexit.mifospaymentbridge.repository.PaymentRepository;
+import com.omexit.mifospaymentbridge.types.EntityType;
 import com.omexit.mifospaymentbridge.types.PaymentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +17,7 @@ import java.util.List;
  * Created by Antony on 2/12/2016.
  */
 @Service
-public class PaymentServiceImpl  implements PaymentService {
+public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
 
@@ -54,6 +55,11 @@ public class PaymentServiceImpl  implements PaymentService {
 
     @Override
     public Payment findByExternalIdAndChannel(String externalId, Channel channel) {
-        return paymentRepository.findByExternalIdAndChannel(externalId,channel);
+        return paymentRepository.findByExternalIdAndChannel(externalId, channel);
+    }
+
+    @Override
+    public Payment findByTenantIdentifierAndEntityTypeAndMifosPaymentId(String tenantIdentifier, EntityType entityType, Long mifosPaymentId) {
+        return paymentRepository.findByTenantIdentifierAndEntityTypeAndMifosPaymentId(tenantIdentifier, entityType, mifosPaymentId);
     }
 }
